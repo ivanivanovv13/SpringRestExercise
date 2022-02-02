@@ -3,7 +3,9 @@ package com.example.firstSpringExercise.controller;
 import com.example.firstSpringExercise.dto.CarDto;
 import com.example.firstSpringExercise.model.Car;
 import com.example.firstSpringExercise.model.CarOwner;
+import com.example.firstSpringExercise.service.CarOwnerService;
 import com.example.firstSpringExercise.service.CarService;
+import com.example.firstSpringExercise.service.EngineService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +17,12 @@ import javax.validation.constraints.NotNull;
 @RequestMapping("/cars")
  public class CarController {
     @Autowired
-    CarService carService;
+    private CarService carService;
+    @Autowired
+    private EngineService engineService;
+
+    @Autowired
+    private CarOwnerService carOwnerService;
 
     @GetMapping("/{id}")
     ResponseEntity<CarDto> getById(@PathVariable(value="id")int id){
@@ -28,8 +35,12 @@ import javax.validation.constraints.NotNull;
     @PostMapping
     ResponseEntity<CarDto> createCar(@RequestBody @NotNull CarDto carDto)
     {
-        Car car= carService.saveCar(carDto.mapToCar());
-        return ResponseEntity.status(HttpStatus.OK).body(car.mapToCarDto());
+        Car car = carDto.mapToCar();
+        car.setEngine(engineService.findById(carDto.getEngineId()).get());
+        car.setCarOwner(carOwnerService.findCarOwnerById(carDto.getOwnerId()).get());
+        Car newCar = carService.saveCar(car);
+
+        return ResponseEntity.status(HttpStatus.OK).body(newCar.mapToCarDto());
     }
 
 
